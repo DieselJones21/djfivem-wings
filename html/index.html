@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DJ Wings Placement</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="app" class="hidden">
+        <section class="panel">
+            <header class="panel-head">
+                <div>
+                    <p class="eyebrow">DJ Wings</p>
+                    <h1 id="propLabel">Wearable</h1>
+                </div>
+                <span id="slotBadge" class="badge">wings</span>
+            </header>
+
+            <p class="hint">Move the prop on your ped. Camera stays on you — use <kbd>Z</kbd> / <kbd>C</kbd> to spin.</p>
+
+            <div class="field">
+                <label for="bone">Bone</label>
+                <select id="bone"></select>
+            </div>
+
+            <div class="axes" id="axes"></div>
+
+            <div class="step-row">
+                <span>Step</span>
+                <div class="step-pills">
+                    <button type="button" data-step="fine">Fine</button>
+                    <button type="button" data-step="normal" class="active">Normal</button>
+                    <button type="button" data-step="coarse">Coarse</button>
+                </div>
+            </div>
+
+            <div class="keys">
+                <p><kbd>4</kbd><kbd>6</kbd> X · <kbd>8</kbd><kbd>5</kbd> Y · <kbd>7</kbd><kbd>9</kbd> Z</p>
+                <p><kbd>←</kbd><kbd>→</kbd> RZ · <kbd>↑</kbd><kbd>↓</kbd> RX · <kbd>Q</kbd><kbd>E</kbd> RY</p>
+                <p><kbd>Shift</kbd> fine · <kbd>Ctrl</kbd> coarse · <kbd>Enter</kbd> save · <kbd>Esc</kbd> cancel</p>
+            </div>
+
+            <footer class="actions">
+                <button type="button" id="btnCopy" class="ghost">Copy Lua</button>
+                <button type="button" id="btnReset" class="ghost">Reset</button>
+                <button type="button" id="btnCancel" class="ghost">Cancel</button>
+                <button type="button" id="btnSave" class="primary">Save</button>
+            </footer>
+        </section>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
