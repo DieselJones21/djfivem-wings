@@ -22,9 +22,25 @@ const state = {
 
 const inGame = typeof window.GetParentResourceName === 'function';
 const resourceName = inGame ? window.GetParentResourceName() : 'djfivem-wings';
+const PREVIEW_DEFAULT = {
+    id: 'neon_pink_wings',
+    slot: 'wings',
+    bone: 24818,
+    x: 0,
+    y: -0.18,
+    z: 0.02,
+    rx: 0,
+    ry: 90,
+    rz: 180,
+};
 
 function nui(name, payload) {
-    if (!inGame) return Promise.resolve({ ok: true, attach: state.attach });
+    if (!inGame) {
+        if (name === 'reset') {
+            return Promise.resolve({ ok: true, attach: { ...PREVIEW_DEFAULT } });
+        }
+        return Promise.resolve({ ok: true, attach: state.attach });
+    }
     return fetch(`https://${resourceName}/${name}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=UTF-8' },
@@ -67,8 +83,9 @@ function toast(text) {
     const el = document.createElement('div');
     el.className = 'toast';
     el.textContent = text;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1800);
+    const panel = document.querySelector('.panel');
+    panel.insertBefore(el, panel.firstChild);
+    setTimeout(() => el.remove(), 2200);
 }
 
 function applyAttach(next) {
@@ -178,12 +195,31 @@ document.getElementById('btnReset').addEventListener('click', () => {
 document.getElementById('btnCancel').addEventListener('click', () => nui('cancel'));
 document.getElementById('btnCopy').addEventListener('click', async () => {
     const text = luaSnippet();
+    let copied = false;
     try {
-        await navigator.clipboard.writeText(text);
-        toast('Copied default table');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+            copied = true;
+        }
     } catch (err) {
-        toast('Copy failed');
+        copied = false;
     }
+    if (!copied) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            copied = document.execCommand('copy');
+        } catch (err) {
+            copied = false;
+        }
+        ta.remove();
+    }
+    toast(copied ? 'Copied default table' : 'Lua snippet ready');
 });
 
 window.addEventListener('message', (event) => {
@@ -270,17 +306,7 @@ if (!inGame) {
             { id: 64729, name: 'Left clavicle' },
             { id: 10706, name: 'Right clavicle' },
         ],
-        attach: {
-            id: 'neon_pink_wings',
-            slot: 'wings',
-            bone: 24818,
-            x: 0,
-            y: -0.18,
-            z: 0.02,
-            rx: 0,
-            ry: 90,
-            rz: 180,
-        },
+        attach: { ...PREVIEW_DEFAULT },
         steps: state.steps,
     });
 }
