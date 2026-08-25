@@ -1,5 +1,7 @@
 local spawned = {} -- [serverId] = { [slot] = { entity, ped, attach } }
 local missingNotified = {}
+local modelWarned = {}
+local modelFailedAt = {}
 local myServerId = nil
 local previewSlot = nil
 local resourceName = GetCurrentResourceName()

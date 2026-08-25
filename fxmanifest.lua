@@ -21,6 +21,7 @@ server_scripts {
     'server/storage.lua',
     'server/framework.lua',
     'server/main.lua',
+    'server/streamcheck.lua',
 }
 
 ui_page 'html/index.html'
@@ -31,5 +32,6 @@ files {
     'html/app.js',
 }
 
--- Drop your .ydr / .ytd / .ytyp into stream/, then uncomment and set the ytyp filename:
--- data_file 'DLC_ITYP_REQUEST' 'stream/dj_wings.ytyp'
+-- REQUIRED for addon props. Add one line per .ytyp in stream/.
+-- Example: data_file 'DLC_ITYP_REQUEST' 'stream/your_wings.ytyp'
+-- The server console prints the exact lines after a restart if it finds ytyp files.
