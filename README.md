@@ -51,23 +51,25 @@ data_file 'DLC_ITYP_REQUEST' 'stream/your_wings.ytyp'
 In `config.lua`, set `model` to the ydr spawn name (filename without extension):
 
 ```lua
-neon_pink_wings = {
-    label = 'Neon Pink Wings',
-    model = 'your_wings',   -- must match the ydr
+ate_wings_a = {
+    label = 'Wings A',
+    model = 'ate_wings_a', -- must match a name inside the ytyp
     slot = 'wings',
-    bone = 24818,           -- SKEL_Spine3, upper back
+    bone = 24818,          -- SKEL_Spine3, upper back
     default = { x = 0.00, y = -0.18, z = 0.02, rx = 0.00, ry = 90.00, rz = 180.00 },
 },
 ```
 
-Starter entries match the usual setup from the reference screenshot:
+Starter entries (back / Spine3):
 
-| Item | Slot | Bone | Where it sits |
+| Item | Slot | Bone | Model |
 | --- | --- | --- | --- |
-| `neon_pink_wings` | `wings` | 24818 Spine3 | Centered on the upper back |
-| `azure_shoulder_pet` | `shoulder` | 64729 left clavicle | On the left shoulder |
+| `ate_wings_a` | `wings` | 24818 Spine3 | `ate_wings_a` |
+| `ate_wings_b` | `wings` | 24818 Spine3 | `ate_wings_b` |
+| `ate_wings_c` | `wings` | 24818 Spine3 | `ate_wings_c` |
+| `ate_wings_d` | `wings` | 24818 Spine3 | `ate_wings_d` |
 
-Copy a `Config.Props` block to add more wings or pets. Item name = table key.
+Copy a `Config.Props` block to add more styles. Item name = table key. The spawn name must exist **inside** `ate_wings.ytyp`, not only as a `.ydr` filename.
 
 If the models are not streamed yet, set `Config.DebugPlaceholder = true` to test attach / sync / editor with a vanilla bag.
 
@@ -76,7 +78,7 @@ If the models are not streamed yet, set `Config.DebugPlaceholder = true` to test
 | Action | How |
 | --- | --- |
 | Equip / remove | Use the item in inventory |
-| Admin / standalone test | `/wingtest neon_pink_wings` |
+| Admin / standalone test | `/wingtest ate_wings_a` |
 | List ids | `/wings` |
 | Remove all | `/wingsoff` |
 | Placement editor | `F7` or `/wingeditor` (wear the prop first) |
@@ -94,9 +96,9 @@ Saved placements replicate to every player.
 - Any other inventory can call:
 
 ```lua
-exports['djfivem-wings']:toggle(source, 'neon_pink_wings')
+exports['djfivem-wings']:toggle(source, 'ate_wings_a')
 -- or
-TriggerEvent('djwings:internalToggle', source, 'neon_pink_wings')
+TriggerEvent('djwings:internalToggle', source, 'ate_wings_a')
 ```
 
 ## Exports
@@ -104,7 +106,7 @@ TriggerEvent('djwings:internalToggle', source, 'neon_pink_wings')
 **Server**
 
 ```lua
-exports['djfivem-wings']:toggle(src, 'neon_pink_wings')
+exports['djfivem-wings']:toggle(src, 'ate_wings_a')
 exports['djfivem-wings']:clear(src)
 exports['djfivem-wings']:getEquipped(src)
 ```
@@ -113,7 +115,7 @@ exports['djfivem-wings']:getEquipped(src)
 
 ```lua
 exports['djfivem-wings']:getEquipped()
-exports['djfivem-wings']:isWearing('neon_pink_wings')
+exports['djfivem-wings']:isWearing('ate_wings_a')
 ```
 
 ## Tuning

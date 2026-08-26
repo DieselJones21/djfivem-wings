@@ -59,43 +59,39 @@ Config.Locale = {
     Each entry is one inventory item AND one wearable.
 
     id (table key)  = item name in ox_inventory / qb / esx
-    model           = spawn name from your .ydr (filename without extension)
-    slot            = only one prop per slot (wings + shoulder can be worn together)
+    model           = spawn name from the ytyp (usually the .ydr name without extension)
+    slot            = only one prop per slot (using another wings item swaps it)
     bone            = GTA bone id (see Config.Bones)
     default         = AttachEntityToEntity offset / rotation
-    label           = notify + editor title
-
-    Replace the model names with YOUR streamed prop names, then add the ytyp
-    line in fxmanifest.lua.
 ]]
 Config.Props = {
-    neon_pink_wings = {
-        label = 'Neon Pink Wings',
-        model = 'dj_wings_neon_pink',
+    ate_wings_a = {
+        label = 'Wings A',
+        model = 'ate_wings_a',
         slot = 'wings',
-        bone = 24818, -- SKEL_Spine3 (upper back)
-        default = {
-            x = 0.00,
-            y = -0.18,
-            z = 0.02,
-            rx = 0.00,
-            ry = 90.00,
-            rz = 180.00,
-        },
+        bone = 24818,
+        default = { x = 0.00, y = -0.18, z = 0.02, rx = 0.00, ry = 90.00, rz = 180.00 },
     },
-    azure_shoulder_pet = {
-        label = 'Azure Shoulder Companion',
-        model = 'dj_pet_azure',
-        slot = 'shoulder',
-        bone = 64729, -- SKEL_L_Clavicle (left shoulder)
-        default = {
-            x = 0.14,
-            y = 0.02,
-            z = 0.16,
-            rx = 0.00,
-            ry = 0.00,
-            rz = 180.00,
-        },
+    ate_wings_b = {
+        label = 'Wings B',
+        model = 'ate_wings_b',
+        slot = 'wings',
+        bone = 24818,
+        default = { x = 0.00, y = -0.18, z = 0.02, rx = 0.00, ry = 90.00, rz = 180.00 },
+    },
+    ate_wings_c = {
+        label = 'Wings C',
+        model = 'ate_wings_c',
+        slot = 'wings',
+        bone = 24818,
+        default = { x = 0.00, y = -0.18, z = 0.02, rx = 0.00, ry = 90.00, rz = 180.00 },
+    },
+    ate_wings_d = {
+        label = 'Wings D',
+        model = 'ate_wings_d',
+        slot = 'wings',
+        bone = 24818,
+        default = { x = 0.00, y = -0.18, z = 0.02, rx = 0.00, ry = 90.00, rz = 180.00 },
     },
 }
 

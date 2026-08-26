@@ -101,22 +101,48 @@ function DestroyAllFor(serverId)
 end
 
 local function loadModel(name)
+    if type(name) ~= 'string' or name == '' then
+        return nil
+    end
     local hash = joaat(name)
     if HasModelLoaded(hash) then
         return hash
     end
     local failedAt = modelFailedAt[name]
-    if failedAt and (GetGameTimer() - failedAt) < 15000 then
+    if failedAt and (GetGameTimer() - failedAt) < 8000 then
         return nil
     end
+
+    local validUntil = GetGameTimer() + 4000
+    while not IsModelValid(hash) and not IsModelInCdimage(hash) do
+        RequestModel(hash)
+        if GetGameTimer() > validUntil then
+            break
+        end
+        Wait(50)
+    end
+
     RequestModel(hash)
-    local timeout = GetGameTimer() + 3000
+    local timeout = GetGameTimer() + 6000
     while not HasModelLoaded(hash) do
+        RequestModel(hash)
         if GetGameTimer() > timeout then
             modelFailedAt[name] = GetGameTimer()
             if not modelWarned[name] then
                 modelWarned[name] = true
-                print(('[djfivem-wings] Failed to load model "%s". Check stream/ and the ytyp data_file in fxmanifest.lua.'):format(name))
+                local archetypes = GlobalState.djwingsArchetypes
+                print(('[djfivem-wings] Failed to load "%s" hash=%s valid=%s cdimage=%s'):format(
+                    name,
+                    hash,
+                    tostring(IsModelValid(hash)),
+                    tostring(IsModelInCdimage(hash))
+                ))
+                if type(archetypes) == 'table' and #archetypes > 0 then
+                    print(('[djfivem-wings] Names inside your ytyp: %s'):format(table.concat(archetypes, ', ')))
+                    print('[djfivem-wings] Config.Props[].model must match a ytyp name, not only the .ydr filename.')
+                else
+                    print('[djfivem-wings] Ytyp did not register. Confirm data_file DLC_ITYP_REQUEST and that ate_wings.ytyp is a compiled ytyp (not XML).')
+                end
             end
             return nil
         end
@@ -153,6 +179,9 @@ local function createProp(ped, attach)
 
     local coords = GetEntityCoords(ped)
     local entity = CreateObjectNoOffset(hash, coords.x, coords.y, coords.z, false, false, false)
+    if entity == 0 or not DoesEntityExist(entity) then
+        entity = CreateObject(hash, coords.x, coords.y, coords.z, false, false, false)
+    end
     SetModelAsNoLongerNeeded(hash)
     if entity == 0 or not DoesEntityExist(entity) then
         return nil
@@ -394,5 +423,33 @@ end, false)
 RegisterNetEvent('djwings:use', function(propId)
     TriggerServerEvent('djwings:toggle', propId)
 end)
+
+CreateThread(function()
+    Wait(1500)
+    for _, prop in pairs(Config.Props) do
+        local hash = joaat(Wearables.ResolveModel(prop))
+        RequestModel(hash)
+    end
+end)
+
+RegisterCommand('wingdebug', function()
+    print('^3[djfivem-wings] model debug^7')
+    local listed = GlobalState.djwingsArchetypes
+    if type(listed) == 'table' then
+        print('ytyp names: ' .. table.concat(listed, ', '))
+    end
+    for id, prop in pairs(Config.Props) do
+        local model = Wearables.ResolveModel(prop)
+        local hash = joaat(model)
+        print(('%s model=%s hash=%s valid=%s cdimage=%s loaded=%s'):format(
+            id,
+            model,
+            hash,
+            tostring(IsModelValid(hash)),
+            tostring(IsModelInCdimage(hash)),
+            tostring(HasModelLoaded(hash))
+        ))
+    end
+end, false)
 
 dbg('client started')
