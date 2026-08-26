@@ -1,21 +1,3 @@
-local SKIP = {
-    CBaseArchetypeDef = true,
-    CMapTypes = true,
-    CEntityDef = true,
-    drawableDictionary = true,
-    textureDictionary = true,
-    physicsDictionary = true,
-    assetType = true,
-    assetName = true,
-    lodDist = true,
-    specialAttribute = true,
-    hdTextureDist = true,
-    ASSET_TYPE_DRAWABLE = true,
-    ASSET_TYPE_ASSETLESS = true,
-    ASSET_TYPE_FRAGMENT = true,
-    ASSET_TYPE_DRAWABLEDICTIONARY = true,
-}
-
 local function listStreamFiles()
     local resPath = GetResourcePath(GetCurrentResourceName()):gsub('\\', '/')
     local streamPath = resPath .. '/stream'
@@ -40,7 +22,7 @@ local function listStreamFiles()
         end
     end
 
-    return files, streamPath
+    return files, streamPath, resPath
 end
 
 local function toStreamRel(full, streamPath)
@@ -63,49 +45,34 @@ local function readFile(path)
     return data
 end
 
-local function addName(list, seen, name)
-    if type(name) ~= 'string' then return end
-    name = name:match('^%s*(.-)%s*$')
-    if name == '' or #name < 3 or #name > 48 then return end
-    if SKIP[name] or name:find('[^%w_]') then return end
-    if seen[name] then return end
-    seen[name] = true
-    list[#list + 1] = name
-end
-
-local function parseYtyp(data)
-    if type(data) ~= 'string' or data == '' then
-        return {}, 'empty'
-    end
-
-    local names, seen = {}, {}
-    local head = data:sub(1, 64)
-    local kind = 'binary'
-    if head:find('<%?xml', 1, false) or head:find('<CMapTypes', 1, true) or head:find('<archetypes', 1, true) then
-        kind = 'xml'
-        for name in data:gmatch('<name>%s*([^<]+)%s*</name>') do
-            addName(names, seen, name)
-        end
-        for name in data:gmatch('<assetName>%s*([^<]+)%s*</assetName>') do
-            addName(names, seen, name)
-        end
-        return names, kind
-    end
-
-    for name in data:gmatch('%z([%a_][%w_]+)%z') do
-        addName(names, seen, name)
-    end
-    if #names == 0 then
-        for name in data:gmatch('[%a_][%w_][%w_]+') do
-            addName(names, seen, name)
+local function pythonNames(resPath, ytypPath)
+    local script = resPath .. '/server/inflate_rsc.py'
+    local cmds = {
+        ('python3 "%s" "%s"'):format(script, ytypPath),
+        ('python "%s" "%s"'):format(script, ytypPath),
+        ('py "%s" "%s"'):format(script, ytypPath),
+    }
+    for i = 1, #cmds do
+        local ok, handle = pcall(io.popen, cmds[i] .. ' 2>/dev/null')
+        if ok and handle then
+            local names = {}
+            for line in handle:lines() do
+                if line and line ~= '' and not YtypParse.isGarbageName(line) then
+                    names[#names + 1] = line
+                end
+            end
+            handle:close()
+            if #names > 0 then
+                return names
+            end
         end
     end
-    return names, kind
+    return {}
 end
 
 CreateThread(function()
     Wait(250)
-    local files, streamPath = listStreamFiles()
+    local files, streamPath, resPath = listStreamFiles()
     local ytyp, ydr, ytd = {}, {}, {}
     for i = 1, #files do
         local rel = toStreamRel(files[i], streamPath)
@@ -130,40 +97,70 @@ CreateThread(function()
         print('^3[djfivem-wings] No .ytd textures in stream/. If the wings are invisible after they spawn, copy the pack\'s .ytd here too.^7')
     end
 
-    local archetypes = {}
+    local confirmed = {}
     local seen = {}
+    local function remember(name)
+        if type(name) ~= 'string' or seen[name] or YtypParse.isGarbageName(name) then
+            return
+        end
+        seen[name] = true
+        confirmed[#confirmed + 1] = name
+    end
+
     if #ytyp == 0 then
         print('^1[djfivem-wings] No .ytyp in stream/. Addon props will not spawn without one.^7')
     else
         for i = 1, #ytyp do
             local full = streamPath .. '/' .. ytyp[i]
-            local data = readFile(full)
-            local names, kind = parseYtyp(data)
+            local data = readFile(full) or ''
+            local kind = YtypParse.kind(data)
             print(('[djfivem-wings] %s (%s)'):format(ytyp[i], kind))
+
             if kind == 'xml' then
-                print('^1[djfivem-wings] That ytyp looks like XML. FiveM needs a compiled .ytyp from CodeWalker, not the XML export.^7')
-            end
-            if #names == 0 then
-                print('^1[djfivem-wings] Could not read archetype names from this ytyp.^7')
+                print('^1[djfivem-wings] That ytyp looks like XML. FiveM needs a compiled .ytyp from CodeWalker.^7')
+                local xmlNames = YtypParse.extractXmlNames(data)
+                for n = 1, #xmlNames do
+                    remember(xmlNames[n])
+                end
+            elseif kind == 'rsc7' then
+                print('[djfivem-wings] RSC7 is the file header, not a spawn name. Keep using the .ydr names (ate_wings_a, ...).')
+                local hits = YtypParse.findKnownModels(data, ydr)
+                for n = 1, #hits do
+                    remember(hits[n])
+                end
+                local unpacked = pythonNames(resPath, full)
+                for n = 1, #unpacked do
+                    remember(unpacked[n])
+                end
+                if #hits == 0 then
+                    print('[djfivem-wings] Archetype strings are compressed inside the ytyp. That is normal. Spawn with the .ydr filenames.')
+                end
             else
-                print(('[djfivem-wings] Names inside ytyp: %s'):format(table.concat(names, ', ')))
-                for n = 1, #names do
-                    addName(archetypes, seen, names[n])
+                local hits = YtypParse.findKnownModels(data, ydr)
+                for n = 1, #hits do
+                    remember(hits[n])
                 end
             end
         end
     end
 
-    GlobalState.djwingsArchetypes = archetypes
+    if #confirmed > 0 then
+        print(('[djfivem-wings] Confirmed spawn names: %s'):format(table.concat(confirmed, ', ')))
+        GlobalState.djwingsArchetypes = confirmed
+    else
+        GlobalState.djwingsArchetypes = ydr
+        if #ydr > 0 then
+            print(('[djfivem-wings] Use these model names in config: %s'):format(table.concat(ydr, ', ')))
+        end
+    end
     GlobalState.djwingsYdrs = ydr
 
     for _, prop in pairs(Config.Props) do
         local model = Wearables.ResolveModel(prop)
-        local inYtyp = seen[model]
-        if not inYtyp and #archetypes > 0 then
-            print(('^1[djfivem-wings] Config model "%s" was not found in the ytyp. Change model= to one of: %s^7'):format(
+        if #confirmed > 0 and not seen[model] then
+            print(('^1[djfivem-wings] Config model "%s" was not one of the confirmed ytyp names: %s^7'):format(
                 model,
-                table.concat(archetypes, ', ')
+                table.concat(confirmed, ', ')
             ))
         end
     end

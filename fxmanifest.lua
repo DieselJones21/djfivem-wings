@@ -10,6 +10,7 @@ version '1.0.1'
 shared_scripts {
     'config.lua',
     'shared/utils.lua',
+    'shared/ytyp.lua',
 }
 
 client_scripts {

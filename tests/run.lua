@@ -47,6 +47,19 @@ assertTrue(not Wearables.AttachEquals(wings, other), 'attach equality rejects di
 local names = Wearables.ItemNames()
 assertTrue(#names == 4, 'item name list includes all four wing styles')
 
+dofile('shared/ytyp.lua')
+assertTrue(YtypParse.kind('RSC7' .. string.rep('\0', 16)) == 'rsc7', 'RSC7 header is classified as rsc7')
+assertTrue(YtypParse.isGarbageName('RSC7'), 'RSC7 is not a spawn name')
+assertTrue(YtypParse.isGarbageName('Ysu'), 'Ysu is not a spawn name')
+assertTrue(not YtypParse.isGarbageName('ate_wings_a'), 'ate_wings_a is a real spawn name')
+local found = YtypParse.findKnownModels('RSC7xxxxate_wings_a\0more', { 'ate_wings_a', 'ate_wings_b' })
+assertTrue(found[1] == 'ate_wings_a', 'plaintext ydr name is detected in a ytyp blob')
+local hashed = 'RSC7' .. YtypParse.u32le(YtypParse.joaat('ate_wings_b'))
+local foundHash = YtypParse.findKnownModels(hashed, { 'ate_wings_b' })
+assertTrue(foundHash[1] == 'ate_wings_b', 'joaat hash of a ydr name is detected in a ytyp blob')
+local ignored = YtypParse.findKnownModels('RSC7 Ysu junk', { 'ate_wings_a' })
+assertTrue(#ignored == 0, 'RSC7/Ysu header bytes do not confirm ate_wings_a')
+
 if failed > 0 then
     print(('FAILED %d check(s)'):format(failed))
     os.exit(1)
