@@ -5,7 +5,7 @@ lua54 'yes'
 name 'djfivem-wings'
 author 'DieselJones21'
 description 'Network-synced wearable props (wings, shoulder pets) with inventory use and a live placement editor'
-version '1.0.0'
+version '1.0.1'
 
 shared_scripts {
     'config.lua',
@@ -30,8 +30,8 @@ files {
     'html/index.html',
     'html/style.css',
     'html/app.js',
+    'stream/*.ytyp',
 }
 
--- REQUIRED for addon props. Add one line per .ytyp in stream/.
--- Example: data_file 'DLC_ITYP_REQUEST' 'stream/your_wings.ytyp'
--- The server console prints the exact lines after a restart if it finds ytyp files.
+-- Addon prop archetypes. One line per .ytyp in stream/.
+data_file 'DLC_ITYP_REQUEST' 'stream/ate_wings.ytyp'
